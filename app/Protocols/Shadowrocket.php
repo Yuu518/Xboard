@@ -94,7 +94,7 @@ class Shadowrocket extends AbstractProtocol
         $protocol_settings = $server['protocol_settings'];
         $userinfo = base64_encode('auto:' . $uuid . '@' . Helper::wrapIPv6($server['host']) . ':' . $server['port']);
         $config = [
-            'tfo' => 1,
+            'tfo' => 0,
             'remark' => $server['name'],
             'alterId' => 0
         ];
@@ -140,7 +140,7 @@ class Shadowrocket extends AbstractProtocol
         $protocol_settings = $server['protocol_settings'];
         $userinfo = base64_encode('auto:' . $uuid . '@' . Helper::wrapIPv6($server['host']) . ':' . $server['port']);
         $config = [
-            'tfo' => 1,
+            'tfo' => 0,
             'remark' => $server['name'],
             'alterId' => 0
         ];
@@ -257,7 +257,7 @@ class Shadowrocket extends AbstractProtocol
         $query = http_build_query($params);
         $addr = Helper::wrapIPv6($server['host']);
 
-        $uri = "trojan://{$password}@{$addr}:{$server['port']}?{$query}&tfo=1#{$name}";
+        $uri = "trojan://{$password}@{$addr}:{$server['port']}?{$query}&tfo=0#{$name}";
         $uri .= "\r\n";
         return $uri;
     }
@@ -274,7 +274,7 @@ class Shadowrocket extends AbstractProtocol
                     "upmbps" => data_get($protocol_settings, 'bandwidth.up'),
                     "downmbps" => data_get($protocol_settings, 'bandwidth.down'),
                     "protocol" => 'udp',
-                    "fastopen" => 1,
+                    "fastopen" => 0,
                 ];
                 if ($serverName = data_get($protocol_settings, 'tls.server_name')) {
                     $params['peer'] = $serverName;
@@ -295,7 +295,7 @@ class Shadowrocket extends AbstractProtocol
             case 2:
                 $params = [
                     "obfs" => 'none',
-                    "fastopen" => 1
+                    "fastopen" => 0
                 ];
                 if ($serverName = data_get($protocol_settings, 'tls.server_name')) {
                     $params['peer'] = $serverName;

@@ -409,7 +409,7 @@ class ClashMeta extends AbstractProtocol
                 if (data_get($protocol_settings, 'obfs.open')) {
                     $array['obfs'] = data_get($protocol_settings, 'obfs.password');
                 }
-                $array['fast-open'] = true;
+                $array['fast-open'] = false;
                 $array['disable_mtu_discovery'] = true;
                 break;
             case 2:

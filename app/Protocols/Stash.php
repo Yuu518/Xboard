@@ -398,7 +398,7 @@ class Stash extends AbstractProtocol
             case 2:
                 $array['type'] = 'hysteria2';
                 $array['auth'] = $password;
-                $array['fast-open'] = true;
+                $array['fast-open'] = false;
                 break;
         }
         return $array;
@@ -418,7 +418,7 @@ class Stash extends AbstractProtocol
             'udp-relay-mode' => data_get($protocol_settings, 'udp_relay_mode', 'native'),
             'alpn' => data_get($protocol_settings, 'alpn', ['h3']),
             'reduce-rtt' => true,
-            'fast-open' => true,
+            'fast-open' => false,
             'heartbeat-interval' => 10000,
             'request-timeout' => 8000,
             'max-udp-relay-packet-size' => 1500,

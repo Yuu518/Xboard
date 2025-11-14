@@ -85,7 +85,7 @@ class QuantumultX extends AbstractProtocol
             "vmess={$server['host']}:{$server['port']}",
             'method=chacha20-poly1305',
             "password={$uuid}",
-            'fast-open=true',
+            'fast-open=false',
             'udp-relay=true',
             "tag={$server['name']}"
         ];
@@ -131,7 +131,7 @@ class QuantumultX extends AbstractProtocol
             $protocol_settings['server_name'] ? "tls-host={$protocol_settings['server_name']}" : "",
             // Tips: allowInsecure=false = tls-verification=true
             $protocol_settings['allow_insecure'] ? 'tls-verification=false' : 'tls-verification=true',
-            'fast-open=true',
+            'fast-open=false',
             'udp-relay=true',
             "tag={$server['name']}"
         ];
