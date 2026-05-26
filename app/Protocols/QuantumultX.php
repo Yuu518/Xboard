@@ -174,7 +174,7 @@ class QuantumultX extends AbstractProtocol
 
     private static function applyCommonSettings(&$config, $server)
     {
-        $config[] = 'fast-open=true';
+        $config[] = 'fast-open=false';
         if ($server['type'] !== Server::TYPE_HTTP) {
             $config[] = 'udp-relay=true';
         }

@@ -99,7 +99,7 @@ class Surfboard extends AbstractProtocol
             "{$server['port']}",
             "encrypt-method=" . data_get($protocol_settings, 'cipher'),
             "password={$password}",
-            'tfo=true',
+            'tfo=false',
             'udp-relay=true'
         ];
 
@@ -146,7 +146,7 @@ class Surfboard extends AbstractProtocol
             "{$server['port']}",
             "username={$uuid}",
             "vmess-aead=true",
-            'tfo=true',
+            'tfo=false',
             'udp-relay=true'
         ];
 
@@ -187,7 +187,7 @@ class Surfboard extends AbstractProtocol
             "{$server['port']}",
             "password={$password}",
             data_get($protocol_settings, 'tls_settings.server_name') ? "sni=" . data_get($protocol_settings, 'tls_settings.server_name') : "",
-            'tfo=true',
+            'tfo=false',
             'udp-relay=true'
         ];
         if (data_get($protocol_settings, 'tls_settings.allow_insecure', false)) {
@@ -208,7 +208,7 @@ class Surfboard extends AbstractProtocol
             "{$server['host']}",
             "{$server['port']}",
             "password={$password}",
-            "tfo=true",
+            "tfo=false",
             "udp-relay=true"
         ];
     
