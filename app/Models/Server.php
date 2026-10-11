@@ -412,6 +412,38 @@ class Server extends Model
         return self::STATUS_ONLINE;
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $server) {
+            if ($server->id) {
+                return;
+            }
+            $nextId = 1;
+            foreach (self::orderBy('id')->pluck('id') as $existingId) {
+                if ((int) $existingId !== $nextId) {
+                    break;
+                }
+                $nextId++;
+            }
+            $server->id = $nextId;
+        });
+
+        static::deleting(function (self $server) {
+            StatServer::where('server_id', $server->id)->delete();
+            self::where('parent_id', $server->id)->update(['parent_id' => null]);
+        });
+
+        static::deleted(function (self $server) {
+            if ($server->parent_id) {
+                return;
+            }
+            $type = strtoupper($server->type);
+            foreach (['ONLINE_USER', 'LAST_CHECK_AT', 'LAST_PUSH_AT', 'LOAD_STATUS', 'LAST_LOAD_AT', 'METRICS'] as $suffix) {
+                Cache::forget(CacheKey::get("SERVER_{$type}_{$suffix}", $server->id));
+            }
+        });
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id', 'id');

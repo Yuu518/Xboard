@@ -120,7 +120,13 @@ class ManageController extends Controller
         if (!$server) {
             return $this->fail([400202, '服务器不存在']);
         }
-        if ($server->delete() === false) {
+        try {
+            $deleted = DB::transaction(fn() => $server->delete());
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail([500, '删除失败']);
+        }
+        if ($deleted === false) {
             return $this->fail([500, '删除失败']);
         }
 
@@ -145,10 +151,13 @@ class ManageController extends Controller
         }
 
         try {
-            $deleted = Server::whereIn('id', $ids)->delete();
-            if ($deleted === false) {
-                return $this->fail([500, '批量删除失败']);
-            }
+            DB::transaction(function () use ($ids) {
+                Server::whereIn('id', $ids)->get()->each(function (Server $server) {
+                    if ($server->delete() === false) {
+                        throw new \RuntimeException("Failed to delete server {$server->id}");
+                    }
+                });
+            });
             return $this->success(true);
         } catch (\Exception $e) {
             Log::error($e);
