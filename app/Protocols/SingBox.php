@@ -20,6 +20,7 @@ class SingBox extends AbstractProtocol
         Server::TYPE_ANYTLS,
         Server::TYPE_SOCKS,
         Server::TYPE_HTTP,
+        Server::TYPE_SNELL,
     ];
     private $config;
     const CUSTOM_TEMPLATE_FILE = 'resources/rules/custom.sing-box.json';
@@ -90,6 +91,9 @@ class SingBox extends AbstractProtocol
                 'protocol_settings.tls.ech.enabled' => [
                     1 => '1.12.0'
                 ]
+            ],
+            'snell' => [
+                'base_version' => '1.14.0'
             ],
             'socks' => [
                 'protocol_settings.tls_settings.ech.enabled' => [
@@ -176,6 +180,13 @@ class SingBox extends AbstractProtocol
             if ($item['type'] === Server::TYPE_HTTP) {
                 $httpConfig = $this->buildHttp($this->user['uuid'], $item);
                 $proxies[] = $httpConfig;
+            }
+            if (
+                $item['type'] === Server::TYPE_SNELL
+                && version_compare($this->getSingBoxCoreVersion() ?? '1.14.0', '1.14.0', '>=')
+            ) {
+                $snellConfig = $this->buildSnell($item['password'], $item);
+                $proxies[] = $snellConfig;
             }
         }
         foreach ($outbounds as &$outbound) {
@@ -839,6 +850,38 @@ class SingBox extends AbstractProtocol
                 $array['tls']['server_name'] = $serverName;
             }
             $this->appendEch($array['tls'], data_get($protocol_settings, 'tls_settings.ech'));
+        }
+
+        return $array;
+    }
+
+    protected function buildSnell($password, $server): array
+    {
+        $protocol_settings = data_get($server, 'protocol_settings', []);
+        $version = (int) data_get($protocol_settings, 'version', 5);
+        $array = [
+            'type' => 'snell',
+            'tag' => $server['name'],
+            'server' => $server['host'],
+            'server_port' => $server['port'],
+            'version' => $version,
+            'psk' => $password,
+        ];
+
+        if (data_get($protocol_settings, 'reuse')) {
+            $array['reuse'] = true;
+        }
+
+        if ($version === 6) {
+            $mode = data_get($protocol_settings, 'mode');
+            if ($mode && $mode !== 'default') {
+                $array['mode'] = $mode;
+            }
+        } elseif (data_get($protocol_settings, 'obfs_mode') === 'http') {
+            $array['obfs_mode'] = 'http';
+            if ($obfsHost = data_get($protocol_settings, 'obfs_host')) {
+                $array['obfs_host'] = $obfsHost;
+            }
         }
 
         return $array;

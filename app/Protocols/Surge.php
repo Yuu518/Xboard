@@ -21,6 +21,7 @@ class Surge extends AbstractProtocol
         Server::TYPE_ANYTLS,
         Server::TYPE_SOCKS,
         Server::TYPE_HTTP,
+        Server::TYPE_SNELL,
     ];
     protected $protocolRequirements = [
         'surge.hysteria.protocol_settings.version' => [2 => '2398'],
@@ -73,6 +74,10 @@ class Surge extends AbstractProtocol
             }
             if ($item['type'] === Server::TYPE_HTTP) {
                 $proxies .= self::buildHttp($item['password'], $item);
+                $proxyGroup .= $item['name'] . ', ';
+            }
+            if ($item['type'] === Server::TYPE_SNELL) {
+                $proxies .= self::buildSnell($item['password'], $item);
                 $proxyGroup .= $item['name'] . ', ';
             }
         }
@@ -268,6 +273,37 @@ class Surge extends AbstractProtocol
             $config[] = !!data_get($protocol_settings, 'tls.allow_insecure') ? 'skip-cert-verify=true' : 'skip-cert-verify=false';
         }
         $config = array_filter($config);
+        $uri = implode(',', $config);
+        $uri .= "\r\n";
+        return $uri;
+    }
+
+    public static function buildSnell($password, $server)
+    {
+        $protocol_settings = data_get($server, 'protocol_settings', []);
+        $version = (int) data_get($protocol_settings, 'version', 5);
+        $config = [
+            "{$server['name']} = snell",
+            "{$server['host']}",
+            "{$server['port']}",
+            "psk={$password}",
+            "version={$version}",
+        ];
+        if (data_get($protocol_settings, 'reuse')) {
+            $config[] = 'reuse=true';
+        }
+        if ($version === 6) {
+            $mode = data_get($protocol_settings, 'mode');
+            if ($mode && $mode !== 'default') {
+                $config[] = "mode={$mode}";
+            }
+        } elseif (data_get($protocol_settings, 'obfs_mode') === 'http') {
+            $config[] = 'obfs=http';
+            if ($obfsHost = data_get($protocol_settings, 'obfs_host')) {
+                $config[] = "obfs-host={$obfsHost}";
+            }
+        }
+        $config[] = 'tfo=false';
         $uri = implode(',', $config);
         $uri .= "\r\n";
         return $uri;

@@ -366,6 +366,16 @@ class ServerService
                 'transport' => data_get($protocolSettings, 'transport', 'TCP'),
                 'traffic_pattern' => $protocolSettings['traffic_pattern'],
             ],
+            'snell' => [
+                ...$baseConfig,
+                'server_port' => (int) $serverPort,
+                'version' => (int) $protocolSettings['version'],
+                'multi_user_authentication' => 'psk',
+                ...match ((int) $protocolSettings['version']) {
+                        6 => ['mode' => $protocolSettings['mode'] ?: 'default'],
+                        default => ['obfs_mode' => $protocolSettings['obfs_mode'] ?: 'none'],
+                    },
+            ],
             default => [],
         };
 

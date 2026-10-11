@@ -25,9 +25,16 @@ class ClashMeta extends AbstractProtocol
         Server::TYPE_SOCKS,
         Server::TYPE_HTTP,
         Server::TYPE_MIERU,
+        Server::TYPE_SNELL,
     ];
 
     protected $protocolRequirements = [
+        '*.snell.protocol_settings.version' => [
+            'whitelist' => [
+                5 => '0.0.0',
+            ],
+            'strict' => true,
+        ],
         '*.vless.protocol_settings.network' => [
             'whitelist' => [
                 'tcp' => '0.0.0',
@@ -192,6 +199,10 @@ class ClashMeta extends AbstractProtocol
             }
             if ($item['type'] === Server::TYPE_MIERU) {
                 array_push($proxy, self::buildMieru($item['password'], $item));
+                array_push($proxies, $item['name']);
+            }
+            if ($item['type'] === Server::TYPE_SNELL) {
+                array_push($proxy, self::buildSnell($item['password'], $item));
                 array_push($proxies, $item['name']);
             }
         }
@@ -701,6 +712,33 @@ class ClashMeta extends AbstractProtocol
         // 如果配置了端口范围
         if (isset($server['ports'])) {
             $array['port-range'] = $server['ports'];
+        }
+
+        return $array;
+    }
+
+    public static function buildSnell($password, $server)
+    {
+        $protocol_settings = data_get($server, 'protocol_settings', []);
+        $array = [
+            'name' => $server['name'],
+            'type' => 'snell',
+            'server' => $server['host'],
+            'port' => $server['port'],
+            'psk' => $password,
+            'version' => (int) data_get($protocol_settings, 'version', 5),
+            'udp' => true,
+        ];
+
+        if (data_get($protocol_settings, 'reuse')) {
+            $array['reuse'] = true;
+        }
+
+        if (data_get($protocol_settings, 'obfs_mode') === 'http') {
+            $array['obfs-opts'] = array_filter([
+                'mode' => 'http',
+                'host' => data_get($protocol_settings, 'obfs_host'),
+            ]);
         }
 
         return $array;

@@ -70,6 +70,7 @@ class Server extends Model
     public const TYPE_NAIVE = 'naive';
     public const TYPE_HTTP = 'http';
     public const TYPE_MIERU = 'mieru';
+    public const TYPE_SNELL = 'snell';
     public const STATUS_OFFLINE = 0;
     public const STATUS_ONLINE_NO_PUSH = 1;
     public const STATUS_ONLINE = 2;
@@ -108,6 +109,7 @@ class Server extends Model
         self::TYPE_NAIVE,
         self::TYPE_HTTP,
         self::TYPE_MIERU,
+        self::TYPE_SNELL,
     ];
 
     protected $table = 'v2_server';
@@ -320,6 +322,13 @@ class Server extends Model
             'transport' => ['type' => 'string', 'default' => 'TCP'],
             'traffic_pattern' => ['type' => 'string', 'default' => ''],
             ...self::MULTIPLEX_CONFIGURATION,
+        ],
+        self::TYPE_SNELL => [
+            'version' => ['type' => 'integer', 'default' => 5],
+            'obfs_mode' => ['type' => 'string', 'default' => 'none'],
+            'obfs_host' => ['type' => 'string', 'default' => null],
+            'mode' => ['type' => 'string', 'default' => 'default'],
+            'reuse' => ['type' => 'boolean', 'default' => true],
         ]
     ];
 

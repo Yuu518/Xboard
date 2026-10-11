@@ -21,6 +21,7 @@ class Stash extends AbstractProtocol
         Server::TYPE_ANYTLS,
         Server::TYPE_SOCKS,
         Server::TYPE_HTTP,
+        Server::TYPE_SNELL,
     ];
     protected $protocolRequirements = [
         // Global rules applied regardless of client version (features Stash never supports)
@@ -33,6 +34,11 @@ class Stash extends AbstractProtocol
             'vmess' => [
                 'protocol_settings.network' => [
                     'httpupgrade' => '9999.0.0',  // httpupgrade not supported in Stash
+                ],
+            ],
+            'snell' => [
+                'protocol_settings.version' => [
+                    '6' => '9999.0.0',
                 ],
             ],
         ],
@@ -133,6 +139,10 @@ class Stash extends AbstractProtocol
             }
             if ($item['type'] === Server::TYPE_HTTP) {
                 array_push($proxy, self::buildHttp($item['password'], $item));
+                array_push($proxies, $item['name']);
+            }
+            if ($item['type'] === Server::TYPE_SNELL) {
+                array_push($proxy, self::buildSnell($item['password'], $item));
                 array_push($proxies, $item['name']);
             }
         }
@@ -513,6 +523,32 @@ class Stash extends AbstractProtocol
             'skip-cert-verify' => (bool) data_get($protocol_settings, 'tls.allow_insecure', false),
             'udp' => true,
         ];
+
+        return $array;
+    }
+
+    public static function buildSnell($password, $server)
+    {
+        $protocol_settings = data_get($server, 'protocol_settings', []);
+        $array = [
+            'name' => $server['name'],
+            'type' => 'snell',
+            'server' => $server['host'],
+            'port' => $server['port'],
+            'psk' => $password,
+            'version' => (int) data_get($protocol_settings, 'version', 5),
+        ];
+
+        if (data_get($protocol_settings, 'reuse')) {
+            $array['reuse'] = true;
+        }
+
+        if (data_get($protocol_settings, 'obfs_mode') === 'http') {
+            $array['obfs-opts'] = array_filter([
+                'mode' => 'http',
+                'host' => data_get($protocol_settings, 'obfs_host'),
+            ]);
+        }
 
         return $array;
     }

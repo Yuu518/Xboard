@@ -107,6 +107,13 @@ class ServerSave extends FormRequest
             'alpn' => 'nullable|string',
             'padding_scheme' => 'nullable|array',
         ],
+        'snell' => [
+            'version' => 'required|integer|in:5,6',
+            'obfs_mode' => 'nullable|string|in:none,http',
+            'obfs_host' => 'nullable|string',
+            'mode' => 'nullable|string|in:default,unshaped',
+            'reuse' => 'nullable|boolean',
+        ],
     ];
 
     private function getBaseRules(): array
@@ -244,6 +251,10 @@ class ServerSave extends FormRequest
         return [
             'protocol_settings.cipher' => '加密方式',
             'protocol_settings.obfs' => '混淆类型',
+            'protocol_settings.obfs_mode' => '混淆模式',
+            'protocol_settings.obfs_host' => '混淆域名',
+            'protocol_settings.mode' => '流量整形模式',
+            'protocol_settings.reuse' => '连接复用',
             'protocol_settings.network' => '传输协议',
             'protocol_settings.port_range' => '端口范围',
             'protocol_settings.traffic_pattern' => 'Traffic Pattern',
