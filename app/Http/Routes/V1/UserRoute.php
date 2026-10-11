@@ -34,6 +34,9 @@ class UserRoute
             $router->get('/checkLogin', [UserController::class, 'checkLogin']);
             $router->post('/transfer', [UserController::class, 'transfer']);
             $router->post('/getQuickLoginUrl', [UserController::class, 'getQuickLoginUrl']);
+            // 节点上报的连接来源 IP，用户可据此发现订阅链接被盗用
+            $router->get('/getOnlineDevices', [UserController::class, 'getOnlineDevices'])
+                ->middleware('throttle:60,1');
             $router->get('/getActiveSession', [UserController::class, 'getActiveSession']);
             $router->post('/removeActiveSession', [UserController::class, 'removeActiveSession']);
             // Order
@@ -61,10 +64,14 @@ class UserRoute
             // Server
             $router->get('/server/fetch', [ServerController::class, 'fetch']);
             // Coupon
-            $router->post('/coupon/check', [CouponController::class, 'check']);
+            // 兑换码/优惠券是可枚举的凭据，限制单账号的试码速率
+            $router->post('/coupon/check', [CouponController::class, 'check'])
+                ->middleware('throttle:20,1');
             // Gift Card
-            $router->post('/gift-card/check', [GiftCardController::class, 'check']);
-            $router->post('/gift-card/redeem', [GiftCardController::class, 'redeem']);
+            $router->post('/gift-card/check', [GiftCardController::class, 'check'])
+                ->middleware('throttle:20,1');
+            $router->post('/gift-card/redeem', [GiftCardController::class, 'redeem'])
+                ->middleware('throttle:20,1');
             $router->get('/gift-card/history', [GiftCardController::class, 'history']);
             $router->get('/gift-card/detail', [GiftCardController::class, 'detail']);
             $router->get('/gift-card/types', [GiftCardController::class, 'types']);

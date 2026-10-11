@@ -10,7 +10,6 @@ class DeviceStateService
 {
     private const PREFIX = 'user_devices:';
     private const TTL = 300;                     // device state ttl
-    private const DB_THROTTLE = 10;             // update db throttle
 
     /**
      * 移除 Redis key 的前缀
@@ -117,7 +116,7 @@ class DeviceStateService
         $ips = [];
 
         foreach ($data as $field => $timestamp) {
-            if ($now - $timestamp <= self::TTL) {
+            if ($now - (int) $timestamp <= self::TTL) {
                 $ips[] = substr($field, strpos($field, ':') + 1);
             }
         }
@@ -146,6 +145,38 @@ class DeviceStateService
     }
 
     /**
+     * 获取单个用户的设备明细（含节点与最后上报时间，已过滤过期数据）
+     *
+     * 返回: [['node_id' => int, 'ip' => string, 'last_seen_at' => int], ...]
+     * 与 getUsersDevices() 的区别是保留了 node_id 和时间戳，供用户自查连接来源。
+     */
+    public function getUserDevices(int $userId): array
+    {
+        $data = Redis::hgetall(self::PREFIX . $userId);
+        $now = time();
+        $devices = [];
+
+        foreach ($data as $field => $timestamp) {
+            if ($now - (int) $timestamp > self::TTL) {
+                continue;
+            }
+
+            $separator = strpos($field, ':');
+            if ($separator === false) {
+                continue;
+            }
+
+            $devices[] = [
+                'node_id' => (int) substr($field, 0, $separator),
+                'ip' => substr($field, $separator + 1),
+                'last_seen_at' => (int) $timestamp,
+            ];
+        }
+
+        return $devices;
+    }
+
+    /**
      * get devices of multiple users (for sync.devices, filter expired data)
      */
     public function getUsersDevices(array $userIds): array
@@ -157,7 +188,7 @@ class DeviceStateService
             if (!empty($data)) {
                 $ips = [];
                 foreach ($data as $field => $timestamp) {
-                    if ($now - $timestamp <= self::TTL) {
+                    if ($now - (int) $timestamp <= self::TTL) {
                         $ips[] = substr($field, strpos($field, ':') + 1);
                     }
                 }

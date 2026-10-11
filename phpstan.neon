@@ -10,6 +10,12 @@ parameters:
     # Level 10 is the highest level
     level: 5
 
+    # Workerman 的 ConnectionInterface 标了 #[AllowDynamicProperties]，
+    # 连接对象上挂业务字段（nodeId、machineId 等）是它自己的用法。
+    # 这里只是把这个事实告诉 PHPStan，不是压制某条告警。
+    universalObjectCratesClasses:
+        - Workerman\Connection\TcpConnection
+
     ignoreErrors:
         - '#Negated boolean expression is always false\.#'
 

@@ -1,0 +1,40 @@
+{
+  "name": "xboard-theme-nova",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Xboard user panel — Ant Design theme (source)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vitest run && vite build && node -e \"require('fs').rmSync('../theme/Nova/assets/index.html',{force:true})\"",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.2",
+    "antd": "^5.22.5",
+    "axios": "^1.7.9",
+    "dayjs": "^1.11.13",
+    "dompurify": "^3.4.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/dompurify": "^3.2.0",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^5.0.1",
+    "jsdom": "^30.1.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^5.0.1"
+  }
+}

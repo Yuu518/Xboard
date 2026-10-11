@@ -22,7 +22,7 @@ class MailService
         }
 
         return (string) preg_replace_callback('/\{\{\s*([a-zA-Z0-9_.-]+)(?:\|([^}]*))?\s*\}\}/', function ($m) use ($vars) {
-            $key = $m[1] ?? '';
+            $key = $m[1];
             $default = array_key_exists(2, $m) ? trim((string) $m[2]) : null;
 
             if (!array_key_exists($key, $vars) || $vars[$key] === null || $vars[$key] === '') {
@@ -259,7 +259,7 @@ class MailService
         if (is_array($vars) && !empty($vars)) {
             $subject = self::renderPlaceholders((string) $subject, $vars);
 
-            if (is_array($templateValue) && isset($templateValue['content']) && is_string($templateValue['content'])) {
+            if (isset($templateValue['content']) && is_string($templateValue['content'])) {
                 $templateValue['content'] = self::renderPlaceholders($templateValue['content'], $vars);
             }
         }
