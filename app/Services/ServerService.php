@@ -257,7 +257,7 @@ class ServerService
 
         $baseConfig = [
             'protocol' => $nodeType,
-            'listen_ip' => '0.0.0.0',
+            'listen_ip' => '::',
             'server_port' => (int) $serverPort,
             'network' => data_get($protocolSettings, 'network'),
             'networkSettings' => data_get($protocolSettings, 'network_settings') ?: null,
