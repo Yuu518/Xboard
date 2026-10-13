@@ -280,12 +280,14 @@ class ServerService
                 'tls' => (int) $protocolSettings['tls'],
                 'tls_settings' => $protocolSettings['tls_settings'],
                 'multiplex' => data_get($protocolSettings, 'multiplex'),
+                'listen_unix' => data_get($protocolSettings, 'listen_unix') ?: null,
             ],
             'trojan' => [
                 ...$baseConfig,
                 'host' => $host,
                 'server_name' => data_get($protocolSettings, 'tls_settings.server_name'),
                 'multiplex' => data_get($protocolSettings, 'multiplex'),
+                'listen_unix' => data_get($protocolSettings, 'listen_unix') ?: null,
                 'tls' => (int) $protocolSettings['tls'],
                 'tls_settings' => match ((int) $protocolSettings['tls']) {
                         2 => $protocolSettings['reality_settings'],

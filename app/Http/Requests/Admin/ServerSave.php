@@ -55,6 +55,7 @@ class ServerSave extends FormRequest
             'network' => 'required|string',
             'network_settings' => 'nullable|array',
             'rules' => 'nullable|array',
+            'listen_unix' => 'nullable|string|max:107',
         ],
         'trojan' => [
             'tls' => 'nullable|integer',
@@ -62,6 +63,7 @@ class ServerSave extends FormRequest
             'network_settings' => 'nullable|array',
             'server_name' => 'nullable|string',
             'allow_insecure' => 'nullable|boolean',
+            'listen_unix' => 'nullable|string|max:107',
         ],
         'hysteria' => [
             'version' => 'required|integer',
