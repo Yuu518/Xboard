@@ -72,6 +72,11 @@ class NodeRegistry
             return false;
         }
 
+        $notify = ($conn->syncNotifications ?? false) && in_array($event, ['sync.config', 'sync.users', 'sync.user.delta'], true);
+        if ($notify) {
+            $data = [];
+        }
+
         // Machine-mode connections multiplex multiple node IDs through the same
         // socket, so node-scoped events must carry node_id for the client mux.
         if (!empty($conn->machineNodeIds) && $event !== 'sync.nodes' && !array_key_exists('node_id', $data)) {
@@ -80,7 +85,7 @@ class NodeRegistry
 
         $payload = json_encode([
             'event' => $event,
-            'data' => $data,
+            'data' => $notify ? (object) $data : $data,
             'timestamp' => time(),
         ]);
 
@@ -123,7 +128,7 @@ class NodeRegistry
 
         $payload = json_encode([
             'event' => $event,
-            'data' => $data,
+            'data' => $event === 'sync.nodes' && ($conn->nodeListNotifications ?? false) ? (object) [] : $data,
             'timestamp' => time(),
         ]);
 

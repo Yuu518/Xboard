@@ -130,18 +130,8 @@ class NodeSyncService
     {
         $machine = ServerMachine::find($machineId);
 
-        $nodeList = [];
-        if ($machine) {
-            $nodes = ServerService::getMachineNodes($machine);
-            $nodeList = $nodes->map(fn($n) => [
-                'id' => $n->id,
-                'type' => $n->type,
-                'name' => $n->name,
-            ])->values()->toArray();
-        }
-
         // Always publish via Redis so the WS process can update its in-memory registry
-        self::pushMachine($machineId, 'sync.nodes', ['nodes' => $nodeList]);
+        self::pushMachine($machineId, 'sync.nodes', ['nodes' => ServerService::getMachineNodeList($machine)]);
     }
 
     /**

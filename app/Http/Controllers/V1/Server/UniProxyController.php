@@ -90,10 +90,16 @@ class UniProxyController extends Controller
         $node = $this->getNodeInfo($request);
         $response = ServerService::buildNodeConfig($node);
 
-        $response['base_config'] = [
-            'push_interval' => (int) admin_setting('server_push_interval', 60),
-            'pull_interval' => (int) admin_setting('server_pull_interval', 60)
-        ];
+        $policy = ServerService::syncPolicy();
+        if ($request->integer('config_format') === 2) {
+            $response = [
+                'node_config' => $response,
+                'sync' => $policy,
+                'capabilities' => ['report_ack' => true, 'report_parts' => true],
+            ];
+        } else {
+            $response['base_config'] = ['report_ack' => true] + $policy;
+        }
 
         $eTag = sha1(json_encode($response));
         if (str_contains($request->header('If-None-Match', ''), $eTag)) {

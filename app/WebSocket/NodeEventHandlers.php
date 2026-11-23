@@ -3,6 +3,7 @@
 namespace App\WebSocket;
 
 use App\Models\Server;
+use App\Models\ServerMachine;
 use App\Services\DeviceStateService;
 use App\Services\NodeRegistry;
 use App\Services\ServerService;
@@ -13,6 +14,22 @@ use Workerman\Connection\TcpConnection;
 
 class NodeEventHandlers
 {
+    public static function pushMachineNodes(int $machineId): bool
+    {
+        if (!NodeRegistry::getMachine($machineId)) {
+            return false;
+        }
+
+        try {
+            $nodes = ServerService::getMachineNodeList(ServerMachine::find($machineId));
+        } catch (\Throwable $e) {
+            report($e);
+            return false;
+        }
+        NodeRegistry::refreshMachineNodes($machineId, array_column($nodes, 'id'));
+        return NodeRegistry::sendMachine($machineId, 'sync.nodes', ['nodes' => $nodes]);
+    }
+
     /**
      * Handle pong heartbeat
      */
@@ -125,6 +142,12 @@ class NodeEventHandlers
     public static function pushFullSync(TcpConnection $conn, Server $node): void
     {
         $nodeId = (int) $node->id;
+
+        if ($conn->syncNotifications ?? false) {
+            NodeRegistry::send($nodeId, 'sync.config', []);
+            NodeRegistry::send($nodeId, 'sync.users', []);
+            return;
+        }
 
         // Push config
         $config = ServerService::buildNodeConfig($node);

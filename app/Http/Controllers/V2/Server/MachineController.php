@@ -21,19 +21,9 @@ class MachineController extends Controller
     {
         $machine = $this->authenticateMachine($request);
 
-        $nodes = ServerService::getMachineNodes($machine)
-            ->map(fn($node) => [
-                'id' => $node->id,
-                'type' => $node->type,
-                'name' => $node->name,
-            ])->values();
-
         return response()->json([
-            'nodes' => $nodes,
-            'base_config' => [
-                'push_interval' => (int) admin_setting('server_push_interval', 60),
-                'pull_interval' => (int) admin_setting('server_pull_interval', 60),
-            ],
+            'nodes' => ServerService::getMachineNodeList($machine),
+            ($request->integer('config_format') === 2 ? 'sync' : 'base_config') => ServerService::syncPolicy(),
         ]);
     }
 
@@ -129,7 +119,7 @@ class MachineController extends Controller
             ->first();
 
         if (!$machine || !$machine->is_active) {
-            abort(403, 'Machine not found or disabled');
+            abort(403, 'Machine not found or disabled', ['X-Xboard-Machine-State' => 'unavailable']);
         }
 
         $machine->forceFill(['last_seen_at' => now()->timestamp])->saveQuietly();

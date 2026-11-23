@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\ApplyTrafficReport;
 use App\Services\Plugin\PluginManager;
 use App\Utils\CacheKey;
 use Illuminate\Console\Scheduling\Schedule;
@@ -35,6 +36,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('check:commission')->everyMinute()->onOneServer()->withoutOverlapping(5);
         $schedule->command('check:ticket')->everyMinute()->onOneServer()->withoutOverlapping(5);
         $schedule->command('check:traffic-exceeded')->everyMinute()->onOneServer()->withoutOverlapping(10)->runInBackground();
+        $schedule->call([ApplyTrafficReport::class, 'retryPending'])
+            ->name('retry-pending-traffic-reports')->everyFiveMinutes()->onOneServer();
         // reset
         $schedule->command('reset:traffic')->everyMinute()->onOneServer()->withoutOverlapping(10);
         $schedule->command('reset:log')->daily()->onOneServer();

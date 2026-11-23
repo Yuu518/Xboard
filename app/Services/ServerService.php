@@ -10,10 +10,19 @@ use App\Services\Plugin\HookManager;
 use App\Utils\CacheKey;
 use App\Utils\Helper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class ServerService
 {
+
+    public static function syncPolicy(): array
+    {
+        return [
+            'push_interval' => (int) admin_setting('server_push_interval', 60),
+            'pull_interval' => (int) admin_setting('server_pull_interval', 60),
+        ];
+    }
 
     /**
      * 获取所有服务器列表
@@ -45,6 +54,19 @@ class ServerService
             ->where('enabled', true)
             ->orderBy('sort', 'ASC')
             ->get();
+    }
+
+    public static function getMachineNodeList(?ServerMachine $machine): array
+    {
+        if (!$machine) {
+            return [];
+        }
+
+        return self::getMachineNodes($machine)->map(fn($node) => [
+            'id' => $node->id,
+            'type' => $node->type,
+            'name' => $node->name,
+        ])->values()->all();
     }
 
     /**
@@ -121,7 +143,7 @@ class ServerService
     /**
      * 处理节点流量数据汇报
      */
-    public static function processTraffic(Server $node, array $traffic): void
+    public static function processTraffic(Server $node, array $traffic, bool $durable = false): void
     {
         $data = array_filter($traffic, fn($item) =>
             is_array($item) && count($item) === 2
@@ -138,7 +160,24 @@ class ServerService
         Cache::put(CacheKey::get("SERVER_{$nodeType}_ONLINE_USER", $nodeId), count($data), 3600);
         Cache::put(CacheKey::get("SERVER_{$nodeType}_LAST_PUSH_AT", $nodeId), time(), 3600);
 
-        (new UserService())->trafficFetch($node, $node->type, $data);
+        (new UserService())->trafficFetch($node, $node->type, $data, $durable);
+    }
+
+    public static function processTrafficReport(Server $node, array $traffic, string $stream, int $sequence): void
+    {
+        DB::transaction(function () use ($node, $traffic, $stream, $sequence) {
+            $key = ['node_id' => $node->id, 'stream' => $stream];
+            $receipts = DB::table('v2_server_traffic_cursor')->where($key);
+            DB::table('v2_server_traffic_cursor')->insertOrIgnore($key + ['sequence' => $sequence - 1]);
+            $last = (int) $receipts->lockForUpdate()->value('sequence');
+            if ($sequence <= $last) {
+                return;
+            }
+            abort_unless($sequence === $last + 1, 409, 'Unexpected traffic report sequence');
+
+            self::processTraffic($node, $traffic, true);
+            $receipts->update(['sequence' => $sequence]);
+        }, 3);
     }
 
     /**

@@ -143,6 +143,8 @@ class NodeWorker
         }
 
         parse_str($queryString, $params);
+        $conn->syncNotifications = ($params['sync_mode'] ?? '') === 'notify';
+        $conn->nodeListNotifications = ($params['nodes_mode'] ?? '') === 'notify';
 
         if (isset($conn->authTimer)) {
             Timer::del($conn->authTimer);
@@ -378,12 +380,9 @@ class NodeWorker
             $machineId = $payload['machine_id'] ?? null;
             if ($machineId && $event) {
                 // Update server-side registry when node membership changes
-                if ($event === 'sync.nodes') {
-                    $nodeIds = array_map('intval', array_column($data['nodes'] ?? [], 'id'));
-                    NodeRegistry::refreshMachineNodes((int) $machineId, $nodeIds);
-                }
-
-                $sent = NodeRegistry::sendMachine((int) $machineId, $event, $data);
+                $sent = $event === 'sync.nodes'
+                    ? NodeEventHandlers::pushMachineNodes((int) $machineId)
+                    : NodeRegistry::sendMachine((int) $machineId, $event, $data);
                 if ($sent) {
                     Log::debug("[WS] Pushed {$event} to machine#{$machineId}");
                 }

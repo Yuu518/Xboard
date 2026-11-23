@@ -47,9 +47,9 @@ class StatServerJob implements ShouldQueue
         $this->recordType = $recordType;
     }
 
-    public function handle(): void
+    public function handle(?int $recordAt = null): void
     {
-        $recordAt = $this->recordType === 'm'
+        $recordAt ??= $this->recordType === 'm'
             ? strtotime(date('Y-m-01'))
             : strtotime(date('Y-m-d'));
 
@@ -80,7 +80,7 @@ class StatServerJob implements ShouldQueue
 
     protected function processServerStat(int $u, int $d, int $recordAt): void
     {
-        $driver = config('database.default');
+        $driver = DB::connection()->getDriverName();
         if ($driver === 'sqlite') {
             $this->processServerStatForSqlite($u, $d, $recordAt);
         } elseif ($driver === 'pgsql') {

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ApplyTrafficReport;
 use App\Jobs\StatServerJob;
 use App\Jobs\StatUserJob;
 use App\Jobs\TrafficFetchJob;
@@ -114,7 +115,7 @@ class UserService
         return true;
     }
 
-    public function trafficFetch(Server $server, string $protocol, array $data)
+    public function trafficFetch(Server $server, string $protocol, array $data, bool $durable = false)
     {
         $server->rate = $server->getCurrentRate();
         $server = $server->toArray();
@@ -124,10 +125,15 @@ class UserService
         list($server, $protocol, $data) = HookManager::filter('traffic.before_process', [$server, $protocol, $data]);
 
         $timestamp = strtotime(date('Y-m-d'));
-        collect($data)->chunk(1000)->each(function ($chunk) use ($timestamp, $server, $protocol) {
-            TrafficFetchJob::dispatch($server, $chunk->toArray(), $protocol, $timestamp);
-            StatUserJob::dispatch($server, $chunk->toArray(), $protocol, 'd');
-            StatServerJob::dispatch($server, $chunk->toArray(), $protocol, 'd');
+        collect($data)->chunk(1000)->each(function ($chunk) use ($timestamp, $server, $protocol, $durable) {
+            $traffic = $chunk->all();
+            if ($durable) {
+                ApplyTrafficReport::store($server, $traffic, $protocol, $timestamp);
+                return;
+            }
+            TrafficFetchJob::dispatch($server, $traffic, $protocol, $timestamp);
+            StatUserJob::dispatch($server, $traffic, $protocol, 'd');
+            StatServerJob::dispatch($server, $traffic, $protocol, 'd');
         });
     }
 
